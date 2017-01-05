@@ -1,0 +1,12 @@
+<div align="center" class="container-fluid">
+	<div class="row-fluid" ng-hide='hideform'>
+		<input ng-model="url" placeholder="https://github.com/mpirnat/lets-be-bad-guys" class='input-lg centering' style="width:500px;" required>
+		<button ng-click="hideform=true; analyze(url);" class='btn-lg btn-primary centering'><i class="fa fa-search"></i></button>
+	</div>
+	<div ng-show='hideform'>
+		<h1>Loading....!</h1>
+		<h1>{{quote}}</h1>
+	</div>
+</div>
+
+

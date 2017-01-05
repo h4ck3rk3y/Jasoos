@@ -1,0 +1,1 @@
+# Python Static Code Analyzer in a Python
