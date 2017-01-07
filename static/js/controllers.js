@@ -9,7 +9,8 @@ function waitmessages($scope, $timeout)
 			"The true computer hackers follow a certain set of ethics that forbids them to profit or cause harm from their activities.",
 			"If you think technology can solve your security problems, then you don’t understand the problems and you don’t understand the technology.",
 			"Passwords are like underwear: you don’t let people see it, you should change it very often, and you shouldn’t share it with strangers.",
-			"If you spend more on coffee than on IT security, you will be hacked. What’s more, you deserve to be hacked."
+			"If you spend more on coffee than on IT security, you will be hacked. What’s more, you deserve to be hacked.",
+			"Most people don't know what a rootkit is. So why should they care about it?"
 		]
 		var quote = securityquotes[Math.floor(Math.random() * securityquotes.length)];
 		$scope.quote = quote;
