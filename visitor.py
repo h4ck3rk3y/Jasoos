@@ -25,6 +25,8 @@ class RecursiveVisitor(ast.NodeVisitor):
         'xml.etree.cElementTree': {'severity': 'low', 'text': 'use defusedxml instead'},
     }
 
+    # @ToDo
+    # Add specific functions like new
     bad_calls = {
         'pickle': {'functions' : ['loads', 'load', 'Unpickler'], 'severity': 'medium', 'text':'possible security issue with pickle'},
         'cPickle': {'functions' : ['loads', 'load', 'Unpickler'], 'severity': 'medium', 'text':'possible security issue with pickle'},
@@ -33,7 +35,15 @@ class RecursiveVisitor(ast.NodeVisitor):
         'cryptography.hazmat.primitives.hashes': {'functions': ['MD5'], 'severity': 'medium', 'text':'md-5 can be cracked use something stronger'},
         'marshal': {'functions': ['loads', 'load'], 'severity': 'medium', 'text': 'deserialization with marshall is dangerous'},
         'Crypto.Cipher': {'functions': ['ARC2','ARC4', 'Blowfish', 'DES', 'XOR'], 'severity': 'High', 'text': 'use AES insted'},
-        ''
+        'cryptography.hazmat.primitives.ciphers.algorithms': {'functions': ['ARC4', 'BlowFish', 'IDEA']: 'severity': 'HIGH', 'text': 'use AES insted'},
+        'cryptography.hazmat.primitives.ciphers.modes': {'functions': ['ECB'], 'severity': 'Medium', 'text': 'ECB has patterns use CBC instead?'}
+        'tempfile': {'functions': ['mktemp_q'], 'severity': 'medium', 'text': 'the function is insecure and deprecated'},
+        'standard1': {'functions': ['eval'], 'severity': 'medium', 'text': 'use ast.literal_eval instead'},
+        'django.utils.safestring.': {'functions': ['mark_safe'], 'severity': 'medium', 'text': 'possible xss, avoid using?'},
+        'httplib': {'functions': ['HTTPSConnection'], 'severity': 'medium', 'text': 'use of HTTPSConnection doesnt provide safety'},
+        'http.client': {'functions': ['HTTPSConnection'], 'severity': 'medium', 'text': 'use of HTTPSConnection doesnt provide safety'},
+        'six.moves.http_client': {'functions': ['HTTPSConnection'], 'severity': 'medium', 'text': 'use of HTTPSConnection doesnt provide safety'},
+        'random': {'functions': ['random', 'randrange', 'choice', 'uniform', 'triangular'], 'severity': 'low', 'not suitable for crypto purposes'},
     }
 
 
