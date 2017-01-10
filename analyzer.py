@@ -1,8 +1,12 @@
 from dulwich import porcelain
 from dulwich.errors import *
+
 from urlparse import urlparse
+
 import math
 
+import ast
+from visitor import RecursiveVisitor
 
 import os
 # ToDO
@@ -21,15 +25,13 @@ class StaticAnalyzer:
 		except:
 			pass
 
+
 		try:
 			self.repo = porcelain.clone(self.url, self.path)
 		except NotGitRepository:
 			raise Exception('Not Git Repo')
 		except OSError:
 			raise Exception('File seems to have been already analyzed')
-
-		self.load_tests()
-		self.analyze()
 
 	def validate_url(self):
 		parsed_url = urlparse(self.url)
@@ -39,30 +41,28 @@ class StaticAnalyzer:
 			return False, "Host not GitHub"
 
 		if parsed_url.scheme in ("https", "http"):
-			self.url.replace('https', 'git').replace('http', 'git')
+			self.url = self.url.replace('https', 'git').replace('http', 'git')
 			return True
 
 		if parsed_url.scheme == 'git':
 			return True
 
-	def add_to_report(self, issue, location, severity, confidence):
-
-		threat = {
-			'issue': issue
-			'location': location,
-			'severity': severity,
-			'confidence': confidence
-		}
-
-		self.report.append(threat)
-
-
-	def load_tests(self):
-		self.codechecks = []
-		for codechecker in os.listdir('codechecks'):
-			self.codechecks.append('codechecks.%s' %(codechecker.replace('.py', '')))
+	def run_tests(self, source, filename):
+		tree = ast.parse(source)
+		recursive_visitor = RecursiveVisitor()
+		recursive_visitor.set_filename(filename)
+		recursive_visitor.visit(tree)
 
 	def analyze(self):
-		self.report =  []
 
+		for root, dirs, files in os.walk(self.path):
+			for f in files:
+				_, extension = os.path.splitext(f)[1]
+
+				# maybe support other files in the future
+				if extension not in ('.py'):
+					continue
+
+				with open(os.path.join(root, f), 'r').read() as source:
+					self.run_tests(source, f)
 

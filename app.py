@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from flask import render_template, send_from_directory, make_response
 import time
 
+from analyzer import StaticAnalyzer
+
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
@@ -17,6 +19,8 @@ def analyzer_api():
 	request_data = request.get_json(silent=True)
 	if 'url' in request_data:
 		url = request_data['url']
+		analyzer = StaticAnalyzer(url)
+		analyzer.analyze()
 		data = {'status': 'success', 'url': url}
 		return jsonify(**data)
 	else:
