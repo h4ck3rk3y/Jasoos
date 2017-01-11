@@ -186,7 +186,6 @@ class RecursiveVisitor(ast.NodeVisitor):
                     self.add_to_report('xss', node.lineno, 'high', 'high', 'auto escape is false by default set to true, please correct it or face XSS')
 
 
-
         if isinstance(node.func, ast.Attribute):
 
             # bad-calls
@@ -218,6 +217,13 @@ class RecursiveVisitor(ast.NodeVisitor):
 
             if node.func.attr in ('execute', 'executemany') and len(node.args)>1:
                 return False
+
+            #exec-as-root
+            if (self.fun_module.get(getattr(node.func.value, 'id', None), {}).get('module', None) in ('ceilometer', 'cinder', 'neutron.agent.linux', 'nova') and self.fun_module[node.func.value.id]['name'] == 'utils'):
+                for keyword in node.keywords:
+                    if keyword.arg=='run_as_root' and (getattr(keyword.value, 'id', None)=='False' or getattr(keyword.value, 'value', None) == True):
+                        self.add_to_report('exec-as-root', node.lineno, 'low', 'high', 'run as root can be potentially dangerous, set to false')
+                        auto_escape_found = True
 
     def visit_BinOp(self, node):
 
