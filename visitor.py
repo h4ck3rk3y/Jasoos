@@ -55,7 +55,11 @@ class RecursiveVisitor(ast.NodeVisitor):
         'six.moves.http_client': {'functions': ['HTTPSConnection'], 'severity': 'medium', 'text': 'use of HTTPSConnection doesnt provide safety'},
         'random': {'functions': ['random', 'randrange', 'choice', 'uniform', 'triangular'], 'severity': 'low', 'text': 'not suitable for crypto purposes'},
         'paramiko': {'functions': ['exec_command'], 'severity': 'medium', 'text':'Possible shell injection via Paramiko call, check inputs are properly sanitized', 'heading': 'shell-injection'},
-        'SSHClient': {'functions': ['invoke_shell'], 'severity': 'medium', 'text':'Possible shell injection, check inputs are properly sanitized', 'heading': 'shell-injection'}
+        'SSHClient': {'functions': ['invoke_shell'], 'severity': 'medium', 'text':'Possible shell injection, check inputs are properly sanitized', 'heading': 'shell-injection'},
+        'os': {'functions': ['system', 'popen', 'popen2', 'popen3', 'popen4'], 'severity': 'low', 'text': 'Possible shell injection', 'heading': 'shell-injection'},
+        'popen2': {'functions': ['popen2', 'popen3', 'popen4', 'Popen3', 'Popen4'], 'severity': 'low', 'text': 'Possible shell injection', 'heading': 'shell-injection'},
+        'commands': {'functions': ['getoutput', 'getstatusoutput'], 'severity': 'low', 'text': 'Possible shell injection', 'heading': 'shell-injection'},
+        'subprocess': {'functions': ['Popen', 'call', 'check_call', 'check_output'], 'severity': 'low', 'text': 'Possible shell injection', 'heading': 'shell-injection'}
     }
 
     bad_functions = [x['functions'] for x in bad_calls.values()]
