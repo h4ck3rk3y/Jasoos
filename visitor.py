@@ -32,6 +32,8 @@ class RecursiveVisitor(ast.NodeVisitor):
         'xml.sax': {'severity': 'low', 'text': 'use defusedxml instead'},
         'xml.etree.ElementTree': {'severity': 'low', 'text': 'use defusedxml instead'},
         'xml.etree.cElementTree': {'severity': 'low', 'text': 'use defusedxml instead'},
+        'mako': {'severity': 'medium', 'text': 'mako has no autoescape feature, use proper tags in html', 'heading': 'xss'},
+        'mako.template': {'severity': 'medium', 'text': 'mako has no autoescape feature, use proper tags in html', 'heading': 'xss'},
     }
 
     # @ToDo
@@ -136,7 +138,8 @@ class RecursiveVisitor(ast.NodeVisitor):
                 self.fun_module[alias.name] = {'module': alias.name, 'name': alias.name}
 
             if isinstance(alias, ast.alias) and alias.name in self.bad_imports:
-                self.add_to_report('bad-import', node.lineno, self.bad_imports[alias.name]['severity'], 'high', self.bad_imports[alias.name]['text'])
+                heading = self.bad_imports[alias.name].get('heading', False) or 'bad-import'
+                self.add_to_report(heading, node.lineno, self.bad_imports[alias.name]['severity'], 'high', self.bad_imports[alias.name]['text'])
 
     @recursive
     def visit_ImportFrom(self, node):
@@ -153,7 +156,8 @@ class RecursiveVisitor(ast.NodeVisitor):
                     self.fun_module[alias.name] = {'module': node.module, 'name': alias.name}
 
             if isinstance(alias, ast.alias) and alias.name in self.bad_imports:
-                self.add_to_report('bad-import', node.lineno, self.bad_imports[alias.name]['severity'], 'high', self.bad_imports[alias.name]['text'])
+                heading = self.bad_imports[alias.name].get('heading', False) or 'bad-import'
+                self.add_to_report(heading, node.lineno, self.bad_imports[alias.name]['severity'], 'high', self.bad_imports[alias.name]['text'])
 
     @recursive
     def visit_Call(self, node):
@@ -169,6 +173,7 @@ class RecursiveVisitor(ast.NodeVisitor):
             if node.func.id == '__import__' and len(node.args) > 0:
                 module_name = node.args[0]
                 if isinstance(module_name, ast.Str) and module_name.s in self.bad_imports:
+                    heading = self.bad_imports[module_name.s].get('heading', False) or 'bad-import'
                     self.add_to_report('bad-import', node.lineno, self.bad_imports[module_name.s]['severity'], 'high', self.bad_imports[module_name.s]['text'])
 
             #jinja-2-xss
