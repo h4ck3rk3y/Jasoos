@@ -1,11 +1,20 @@
 import ast
 
+# @ToDo
+# Add Support for
+# import A.B
+# A.B.C.d()
+# support such bad calls
+
 class RecursiveVisitor(ast.NodeVisitor):
 
     report = []
     filename = ''
     usual_suspects = set(['password', 'pass', 'secret', 'token', 'passwd', 'pwd'])
     fun_module = {}
+
+    # specifically for SQL injection, dumb way to make strings come together :/
+    done_line = set()
 
     bad_imports = {
         'telnetlib': {'severity': 'high', 'text': 'Use SSH or some other encrypted protocol.'},
@@ -42,7 +51,10 @@ class RecursiveVisitor(ast.NodeVisitor):
         'httplib': {'functions': ['HTTPSConnection'], 'severity': 'medium', 'text': 'use of HTTPSConnection doesnt provide safety'},
         'http.client': {'functions': ['HTTPSConnection'], 'severity': 'medium', 'text': 'use of HTTPSConnection doesnt provide safety'},
         'six.moves.http_client': {'functions': ['HTTPSConnection'], 'severity': 'medium', 'text': 'use of HTTPSConnection doesnt provide safety'},
-        'random': {'functions': ['random', 'randrange', 'choice', 'uniform', 'triangular'], 'severity': 'low', 'text': 'not suitable for crypto purposes'}
+        'random': {'functions': ['random', 'randrange', 'choice', 'uniform', 'triangular'], 'severity': 'low', 'text': 'not suitable for crypto purposes'},
+        'paramiko': {'functions': ['exec_command'], 'severity': 'medium', 'text':'Possible shell injection via Paramiko call, check inputs are properly sanitized', 'heading': 'shell-injection'},
+        'SSHClient': {'functions': ['invoke_shell'], 'severity': 'medium', 'text':'Possible shell injection, check inputs are properly sanitized', 'heading': 'shell-injection'},
+        'exec': {'functions': ['exec'], 'severity': 'medium', 'text': 'exec can be dangerous', 'heading': 'use of exec'}
     }
 
     bad_functions = [x['functions'] for x in bad_calls.values()]
@@ -52,9 +64,10 @@ class RecursiveVisitor(ast.NodeVisitor):
 
     def recursive(func):
         def wrapper(self, node):
-            func(self, node)
-            for child in ast.iter_child_nodes(node):
-                self.visit(child)
+            response = func(self, node)
+            if response is not False:
+                for child in ast.iter_child_nodes(node):
+                    self.visit(child)
 
         return wrapper
 
@@ -143,16 +156,15 @@ class RecursiveVisitor(ast.NodeVisitor):
             if isinstance(alias, ast.alias) and alias.name in self.bad_imports:
                 self.add_to_report('bad-import', node.lineno, self.bad_imports[alias.name]['severity'], 'high', self.bad_imports[alias.name]['text'])
 
-
     @recursive
     def visit_Call(self, node):
-
         if isinstance(node.func, ast.Name):
 
             # bad_calls direct
-            if self.fun_module.get(node.func.id, {}).get('module', None) in self.bad_calls and self.fun_module[node.func.id]['name'] in self.bad_functions:
-                module = self.fun_module.get(node.func.id, {}).get('module', None)
-                self.add_to_report('bad-calls', node.lineno, self.bad_calls[module]['severity'], 'high', self.bad_calls[module]['text'])
+            module = self.fun_module.get(node.func.id, {}).get('module', None) or getattr(node.func, 'id' , False)
+            if module in self.bad_calls and self.fun_module[node.func.id]['name'] in self.bad_functions:
+                heading = self.bad_calls[module].get('heading', 'bad-calls')
+                self.add_to_report(heading, node.lineno, self.bad_calls[module]['severity'], 'high', self.bad_calls[module]['text'])
 
             #bad imports
             if node.func.id == '__import__' and len(node.args) > 0:
@@ -178,22 +190,12 @@ class RecursiveVisitor(ast.NodeVisitor):
 
         if isinstance(node.func, ast.Attribute):
 
-            func = node.func
-            call = []
-
-            while isinstance(func.value, ast.Attribute):
-                call.append(func.attr)
-                func = func.value
-            call = call.append(func.attr)
-
-            module = None
-
-
             # bad-calls
             # handles as imports properly
-            if self.fun_module.get(getattr(node.func.value, 'id', None), {}).get('module', None) in self.bad_calls and (node.func.attr in self.bad_functions or (str(self.fun_module[node.func.value.id]['name']) + '.' +  str(node.func.attr)) in self.bad_functions):
-                module = self.fun_module.get(getattr(node.func.value, 'id', None), {}).get('module', None)
-                self.add_to_report('bad-call', node.lineno, self.bad_calls[module]['severity'], 'high', self.bad_calls[module]['text'])
+            module = self.fun_module.get(getattr(node.func.value, 'id', None), {}).get('module', None) or getattr(node.func.value, 'id', False)
+            if module in self.bad_calls and (node.func.attr in self.bad_functions or (str(self.fun_module[node.func.value.id]['name']) + '.' +  str(node.func.attr)) in self.bad_functions):
+                heading = self.bad_calls[module].get('heading', 'bad-calls')
+                self.add_to_report(heading, node.lineno, self.bad_calls[module]['severity'], 'high', self.bad_calls[module]['text'])
 
             # flask debug
             if getattr(node.func.value, 'id', None) == 'app' and node.func.attr == 'run':
@@ -215,7 +217,30 @@ class RecursiveVisitor(ast.NodeVisitor):
                 if not auto_escape_found:
                     self.add_to_report('xss', node.lineno, 'high', 'high', 'auto escape is false by default set to true, please correct it or face XSS')
 
+            if node.func.attr in ('execute', 'executemany') and len(node.args)>1:
+                return False
 
+    def visit_BinOp(self, node):
+
+        if node.lineno in self.done_line:
+            return
+
+        query = []
+        left = node
+        while isinstance(left, ast.BinOp):
+            right = left.right
+            if isinstance(right, ast.Str):
+                query.append(right.s)
+            left = left.left
+        query.append(left.s)
+        query = ' '.join(query[::-1]).replace('  ', '').lower()
+        injection = ((query.startswith('select ') and ' from ' in query) or
+            query.startswith('insert into') or
+            (query.startswith('update ') and ' set ' in query) or
+            query.startswith('delete from '))
+
+        self.add_to_report('sql-injection', node.lineno, 'medium', 'low', 'potential xss by using string based queries')
+        self.done_line.add(node.lineno)
 
     @recursive
     def visit_Module(self, node):
@@ -226,6 +251,7 @@ class RecursiveVisitor(ast.NodeVisitor):
     @recursive
     def generic_visit(self, node):
         # print node,
+        # print node.__dict__,
 
         # try:
         #     print node.lineno
