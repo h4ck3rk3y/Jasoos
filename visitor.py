@@ -53,8 +53,7 @@ class RecursiveVisitor(ast.NodeVisitor):
         'six.moves.http_client': {'functions': ['HTTPSConnection'], 'severity': 'medium', 'text': 'use of HTTPSConnection doesnt provide safety'},
         'random': {'functions': ['random', 'randrange', 'choice', 'uniform', 'triangular'], 'severity': 'low', 'text': 'not suitable for crypto purposes'},
         'paramiko': {'functions': ['exec_command'], 'severity': 'medium', 'text':'Possible shell injection via Paramiko call, check inputs are properly sanitized', 'heading': 'shell-injection'},
-        'SSHClient': {'functions': ['invoke_shell'], 'severity': 'medium', 'text':'Possible shell injection, check inputs are properly sanitized', 'heading': 'shell-injection'},
-        'exec': {'functions': ['exec'], 'severity': 'medium', 'text': 'exec can be dangerous', 'heading': 'use of exec'}
+        'SSHClient': {'functions': ['invoke_shell'], 'severity': 'medium', 'text':'Possible shell injection, check inputs are properly sanitized', 'heading': 'shell-injection'}
     }
 
     bad_functions = [x['functions'] for x in bad_calls.values()]
@@ -246,7 +245,9 @@ class RecursiveVisitor(ast.NodeVisitor):
     def visit_Module(self, node):
         pass
 
-
+    @recursive
+    def visit_Exec(self, node):
+        self.add_to_report('exec-used', node.lineno, 'medium', 'high', 'use of exec is risky')
 
     @recursive
     def generic_visit(self, node):
