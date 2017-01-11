@@ -234,6 +234,7 @@ class RecursiveVisitor(ast.NodeVisitor):
                         self.add_to_report('exec-as-root', node.lineno, 'low', 'high', 'run as root can be potentially dangerous, set to false')
                         auto_escape_found = True
 
+    @recursive
     def visit_BinOp(self, node):
 
         if node.lineno in self.done_line:
@@ -266,12 +267,4 @@ class RecursiveVisitor(ast.NodeVisitor):
 
     @recursive
     def generic_visit(self, node):
-        # print node,
-        # print node.__dict__,
-
-        # try:
-        #     print node.lineno
-        # except:
-        #     print
-
         pass
