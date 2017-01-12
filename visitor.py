@@ -65,7 +65,7 @@ class RecursiveVisitor(ast.NodeVisitor):
     bad_functions = [x['functions'] for x in bad_calls.values()]
     bad_functions = set([j for i in bad_functions for j in i])
 
-
+    only_password = False
 
     def recursive(func):
         def wrapper(self, node):
@@ -78,6 +78,9 @@ class RecursiveVisitor(ast.NodeVisitor):
 
     def set_filename(self, filename):
         self.filename = filename
+
+    def set_only_password(self, only_password):
+        self.only_password = only_password
 
     def add_to_report(self, issue, location, severity, confidence, text):
 
@@ -94,10 +97,12 @@ class RecursiveVisitor(ast.NodeVisitor):
     @recursive
     def visit_Assign(self, node):
 
+        # direct assignment
         for target in node.targets:
             if isinstance(target, ast.Name) and target.id in self.usual_suspects:
                 self.add_to_report('exposed-credentials', target.lineno, 'medium', 'low', 'assigned value to %s' %(target.id))
 
+        # dictionary
         if isinstance(node.value, ast.Str):
             for child_assign in ast.iter_child_nodes(node):
                 if isinstance(child_assign, ast.Subscript):
@@ -114,6 +119,7 @@ class RecursiveVisitor(ast.NodeVisitor):
 
     @recursive
     def visit_arguments(self, node):
+
         interesting_name = False
         argument = None
 
@@ -134,6 +140,10 @@ class RecursiveVisitor(ast.NodeVisitor):
 
     @recursive
     def visit_Import(self, node):
+
+        if only_password:
+            return
+
         lineno = node.lineno
         for alias in ast.iter_child_nodes(node):
             if alias.asname:
@@ -147,6 +157,9 @@ class RecursiveVisitor(ast.NodeVisitor):
 
     @recursive
     def visit_ImportFrom(self, node):
+
+        if only_password:
+            return
 
         lineno = node.lineno
         if node.module in self.bad_imports:
@@ -165,6 +178,10 @@ class RecursiveVisitor(ast.NodeVisitor):
 
     @recursive
     def visit_Call(self, node):
+
+        if only_password:
+            return
+
         if isinstance(node.func, ast.Name):
 
             # bad_calls direct
@@ -237,6 +254,9 @@ class RecursiveVisitor(ast.NodeVisitor):
     @recursive
     def visit_BinOp(self, node):
 
+        if only_password:
+            return
+
         if node.lineno in self.done_line:
             return
 
@@ -263,6 +283,9 @@ class RecursiveVisitor(ast.NodeVisitor):
 
     @recursive
     def visit_Exec(self, node):
+        if only_password:
+            return
+
         self.add_to_report('exec-used', node.lineno, 'medium', 'high', 'use of exec is risky')
 
     @recursive

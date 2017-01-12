@@ -33,6 +33,8 @@ class StaticAnalyzer:
 		except OSError:
 			raise Exception('File seems to have been already analyzed')
 
+		self.complete_report = {}
+
 	def validate_url(self):
 		parsed_url = urlparse(self.url)
 		self.path = 'repos/%s' %(parsed_url.path[1:].replace('/', '-'))
@@ -47,14 +49,18 @@ class StaticAnalyzer:
 		if parsed_url.scheme == 'git':
 			return True
 
-	def run_tests(self, source, filename):
+	def run_tests(self, source, filename, only_password = False, commit = 'HEAD'):
 		tree = ast.parse(source)
 		recursive_visitor = RecursiveVisitor()
 		recursive_visitor.set_filename(filename)
+		recursive_visitor.set_only_password(only_password)
 		recursive_visitor.visit(tree)
+		self.complete_report[filename] = recursive_visitor.report
+		self.complete_report[filename]['commit'] = commit
 
 	def analyze(self):
 
+		# ToDo add support for older file versions
 		for root, dirs, files in os.walk(self.path):
 			for f in files:
 				_, extension = os.path.splitext(f)[1]
