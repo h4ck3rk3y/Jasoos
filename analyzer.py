@@ -1,8 +1,6 @@
-from dulwich import porcelain
-from dulwich.errors import *
 from dulwich.repo import Repo
 from dulwich.object_store import tree_lookup_path
-
+from git import Repo as rp
 
 from urlparse import urlparse
 
@@ -32,14 +30,9 @@ class StaticAnalyzer:
 
 
         try:
-            raw_input
-            self.repo = porcelain.clone(str(self.url), str(self.path))
-        except NotGitRepository:
-            shutil.rmtree(self.path)
-            raise Exception('Not Git Repo')
-        except OSError:
-            shutil.rmtree(self.path)
-            raise Exception('File seems to have been already analyzed')
+            rp.clone_from(self.url, self.path)
+        except:
+            pass
 
         self.complete_report = {}
 
@@ -58,7 +51,11 @@ class StaticAnalyzer:
             return True
 
     def run_tests(self, source, filename, only_password = False, commit = 'HEAD'):
-        tree = ast.parse(source)
+        try:
+            tree = ast.parse(source)
+        except:
+            self.complete_report[filename] = 'unparsable'
+            return
         recursive_visitor = RecursiveVisitor()
         recursive_visitor.clear()
         recursive_visitor.set_filename(filename)

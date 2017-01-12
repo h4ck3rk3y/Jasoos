@@ -275,6 +275,7 @@ class RecursiveVisitor(ast.NodeVisitor):
         if isinstance(left, ast.Str):
             query.append(left.s)
         query = ' '.join(query[::-1]).replace('  ', '').lower()
+
         if not query:
             return
         injection = ((query.startswith('select ') and ' from ' in query) or
@@ -282,7 +283,8 @@ class RecursiveVisitor(ast.NodeVisitor):
             (query.startswith('update ') and ' set ' in query) or
             query.startswith('delete from '))
 
-        self.add_to_report('sql-injection', node.lineno, 'medium', 'low', 'potential sqli by using string based queries')
+        if injection:
+            self.add_to_report('sql-injection', node.lineno, 'medium', 'low', 'potential sqli by using string based queries')
         self.done_line.add(node.lineno)
 
     @recursive
