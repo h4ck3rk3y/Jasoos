@@ -275,6 +275,8 @@ class RecursiveVisitor(ast.NodeVisitor):
         if isinstance(left, ast.Str):
             query.append(left.s)
         query = ' '.join(query[::-1]).replace('  ', '').lower()
+        if not query:
+            return
         injection = ((query.startswith('select ') and ' from ' in query) or
             query.startswith('insert into') or
             (query.startswith('update ') and ' set ' in query) or

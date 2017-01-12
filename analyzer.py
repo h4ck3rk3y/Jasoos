@@ -70,7 +70,6 @@ class StaticAnalyzer:
             self.complete_report[filename]['commits'][commit]= recursive_visitor.report
 
     def get_file(self, r, tree, path):
-        print tree, path
         (mode,sha) = tree_lookup_path(r.get_object,tree,path)
         return r[sha].data
 
@@ -85,7 +84,7 @@ class StaticAnalyzer:
                     continue
 
                 with open(os.path.join(root, f), 'r') as source_file:
-                    self.run_tests(source_file.read(), f)
+                    self.run_tests(source_file.read(), os.path.join(root, f))
 
         r = Repo(self.path)
         for root, dirs, files in os.walk(self.path):
@@ -103,6 +102,6 @@ class StaticAnalyzer:
                         first = False
                         continue
                     source = self.get_file(r, r[commit.commit.id].tree, f)
-                    self.run_tests(source, f, True, commit.commit.id)
+                    self.run_tests(source, os.path.join(root, f), True, commit.commit.id)
 
         shutil.rmtree(self.path)
