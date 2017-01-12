@@ -15,13 +15,13 @@ def basic_pages(**kwargs):
 
 @app.route("/api/analyzer/", methods=["POST"])
 def analyzer_api():
-	time.sleep(5)
 	request_data = request.get_json(silent=True)
 	if 'url' in request_data:
 		url = request_data['url']
 		analyzer = StaticAnalyzer(url)
 		analyzer.analyze()
-		data = {'status': 'success', 'url': url}
+		data = analyzer.complete_report
+		data['status'] = 'success'
 		return jsonify(**data)
 	else:
 		data = {'status': 'error'}

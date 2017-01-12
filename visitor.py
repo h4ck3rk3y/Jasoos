@@ -1,5 +1,6 @@
 import ast
 
+
 # @ToDo
 # Add Support for
 # import A.B
@@ -66,6 +67,10 @@ class RecursiveVisitor(ast.NodeVisitor):
     bad_functions = set([j for i in bad_functions for j in i])
 
     only_password = False
+
+    def clear(self):
+        self.report = []
+        self.done_line = set()
 
     def recursive(func):
         def wrapper(self, node):
@@ -141,7 +146,7 @@ class RecursiveVisitor(ast.NodeVisitor):
     @recursive
     def visit_Import(self, node):
 
-        if only_password:
+        if self.only_password:
             return
 
         lineno = node.lineno
@@ -158,7 +163,7 @@ class RecursiveVisitor(ast.NodeVisitor):
     @recursive
     def visit_ImportFrom(self, node):
 
-        if only_password:
+        if self.only_password:
             return
 
         lineno = node.lineno
@@ -179,7 +184,7 @@ class RecursiveVisitor(ast.NodeVisitor):
     @recursive
     def visit_Call(self, node):
 
-        if only_password:
+        if self.only_password:
             return
 
         if isinstance(node.func, ast.Name):
@@ -254,7 +259,7 @@ class RecursiveVisitor(ast.NodeVisitor):
     @recursive
     def visit_BinOp(self, node):
 
-        if only_password:
+        if self.only_password:
             return
 
         if node.lineno in self.done_line:
@@ -267,14 +272,15 @@ class RecursiveVisitor(ast.NodeVisitor):
             if isinstance(right, ast.Str):
                 query.append(right.s)
             left = left.left
-        query.append(left.s)
+        if isinstance(left, ast.Str):
+            query.append(left.s)
         query = ' '.join(query[::-1]).replace('  ', '').lower()
         injection = ((query.startswith('select ') and ' from ' in query) or
             query.startswith('insert into') or
             (query.startswith('update ') and ' set ' in query) or
             query.startswith('delete from '))
 
-        self.add_to_report('sql-injection', node.lineno, 'medium', 'low', 'potential xss by using string based queries')
+        self.add_to_report('sql-injection', node.lineno, 'medium', 'low', 'potential sqli by using string based queries')
         self.done_line.add(node.lineno)
 
     @recursive
@@ -283,7 +289,7 @@ class RecursiveVisitor(ast.NodeVisitor):
 
     @recursive
     def visit_Exec(self, node):
-        if only_password:
+        if self.only_password:
             return
 
         self.add_to_report('exec-used', node.lineno, 'medium', 'high', 'use of exec is risky')
