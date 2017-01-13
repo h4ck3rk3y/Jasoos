@@ -6,10 +6,14 @@ from analyzer import StaticAnalyzer
 
 from rq import Queue
 from rq.job import Job
-from worker import conn
 from rq import get_current_job
+from redis import Redis
 
-q = Queue(connection=conn)
+import random
+
+NUMER_OF_QUEUES = 8
+
+queues = [Queue(str(i), connection=Redis()) for i in range(8)]
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -33,12 +37,11 @@ def analyzer_api():
 	request_data = request.get_json(silent=True)
 	if 'url' in request_data:
 		url = request_data['url']
+		q = random.choice(queues)
 		job = q.enqueue_call(func = 'app.analyze_url', args=(url,), result_ttl=5000)
 		data = {}
 		data['status'] = 'processing'
 		data['id'] = job.get_id()
-		job.meta['current_file'] = 'not-available'
-		job.save()
 		return jsonify(**data)
 	else:
 		data = {'status': 'error'}
@@ -50,7 +53,7 @@ def favicon():
 
 @app.route('/api/result/<queue_id>', methods=["GET"])
 def result(queue_id):
-	job = Job.fetch(queue_id, connection=conn)
+	job = Job.fetch(queue_id, connection=Redis())
 
 	data = {}
 	if job.is_finished:
@@ -58,7 +61,8 @@ def result(queue_id):
 		data['status'] = 'success'
 		return jsonify(**data)
 	else:
-		data['current_file'] = job.meta['current_file']
+		if job.meta.get('current_file', False):
+			data['current_file'] = job.meta['current_file']
 		data['status'] = 'processing'
 		return jsonify(**data)
 

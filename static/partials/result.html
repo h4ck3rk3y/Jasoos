@@ -10,7 +10,7 @@
 			<div ng-repeat="(commitid, issues) in report.commits">
 				<h4>commit_id: {{commitid}}</h4>
 				<div ng-repeat="issue in issues">
-					<h5>{{issue.issue}}</h5>
+					<h4>Issue: {{issue.issue}}</h5>
 					<h6>Confidence: {{issue.confidence}}</h5>
 					<h6>Severity: {{issue.severity}}</h6>
 					<h6>Location: {{issue.location}}</h6>
