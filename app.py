@@ -46,6 +46,8 @@ def analyzer_api():
 		job = q.enqueue_call(func = 'app.analyze_url', args=(url,), result_ttl=5000, ttl=10000, timeout=10000)
 		data = {}
 		data['status'] = 'processing'
+		job.meta['current_file'] = 'still cloning'
+		job.save()
 		data['id'] = job.get_id()
 		return jsonify(**data)
 	else:
@@ -67,8 +69,7 @@ def result(queue_id):
 		data['status'] = 'success'
 		return jsonify(**data)
 	else:
-		if job.meta.get('current_file', False):
-			data['current_file'] = job.meta['current_file']
+		data['current_file'] = job.meta['current_file']
 		data['status'] = 'processing'
 		return jsonify(**data)
 
