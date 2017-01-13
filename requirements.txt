@@ -1,0 +1,5 @@
+dulwich == 0.16.1
+Flask == 0.10.1
+redis == 2.10.5
+rq == 0.7.1
+GitPython == 2.1.1
