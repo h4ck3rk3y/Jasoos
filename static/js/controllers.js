@@ -40,7 +40,7 @@ function SearchController($scope, Search, $window, $timeout){
     	}
     	else
     	{
-    		alert('Please enter a URL');
+    		alert('Please enter a GitHub URL');
     	}
 
     }

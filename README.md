@@ -61,3 +61,4 @@ Replace :id with the id provided by the above API.
 - Alert feature to schedule cron jobs to test the repository and mail developers
 - A wider variety of issues could be covered
 - Performance should be improved via threads or asynchronicity. The redis queue implementation is just a hack to make the UI fancy and the user not waiting.
+- Look for credentials in deleted files. A keys.py might have been committed earlier by the developer. He might have tried to git rm it to fix it, but it's always there anyway.
