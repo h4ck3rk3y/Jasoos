@@ -9,4 +9,4 @@ rq worker 6 &
 rq worker 7 &
 rq worker 8 &
 
-twistd web --wsgi app.app
+twistd web --wsgi app.app -p 80

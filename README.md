@@ -12,6 +12,7 @@ I've implemented tests for a lot of things including
 - dangerous imports
 - debug enabled
 
+
 # Installation Instructions
 
 You need redis and twistd installed and running on your system for the application to run.
@@ -43,7 +44,7 @@ For JSON consume the api at
 
 The API accepts post requests with 'url' set to a GitHub repository
 it returns an object that contains an id which you will use to query
-the result of the analsis
+the result of the analysis
 
 - ec2-52-210-224-160.eu-west-1.compute.amazonaws.com/api/result/:id
 
@@ -57,3 +58,5 @@ Replace :id with the id provided by the above API.
 - Code could have been more robust and could have had tests
 - A Better UI
 - Support for other common web files like actual template files for checking things like {% autoescape off  %}
+- Alert feature to schedule cron jobs to test the repository and mail developers
+- A wider variety of issues could be covered

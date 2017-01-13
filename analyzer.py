@@ -15,10 +15,11 @@ from visitor import RecursiveVisitor
 import os
 import shutil
 
-# ToDO
+# @ToDO
 # Add something to lower the false positive tests. an option maybe.
 # Add parts of code affected for front end?
 
+# Static Analyzer Class
 class StaticAnalyzer:
     def __init__(self, url, job):
         self.url = url
@@ -40,6 +41,7 @@ class StaticAnalyzer:
         self.complete_report = {}
         self.job = job
 
+    # A function that performs basic validation of the URL
     def validate_url(self):
         parsed_url = urlparse(self.url)
         temp_path = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(15))
@@ -55,6 +57,7 @@ class StaticAnalyzer:
         if parsed_url.scheme == 'git':
             return True
 
+    # A function that runs tests on the given file
     def run_tests(self, source, filename, only_password = False, commit = 'HEAD'):
         try:
             tree = ast.parse(source)
@@ -71,10 +74,13 @@ class StaticAnalyzer:
             self.complete_report[filename]['commits'] = self.complete_report[filename].get('commits', {})
             self.complete_report[filename]['commits'][commit]= recursive_visitor.report
 
+    # Fetches previous version of a given file
     def get_file(self, r, tree, path):
         (mode,sha) = tree_lookup_path(r.get_object,tree,path)
         return r[sha].data
 
+    # reads through the repository for files
+    # and calls run_tests on them
     def analyze(self):
 
 

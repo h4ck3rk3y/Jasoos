@@ -7,16 +7,23 @@ import ast
 # A.B.C.d()
 # support such bad calls
 
+# A class that visits everynode and performs tests
 class RecursiveVisitor(ast.NodeVisitor):
 
+    # array of issues
     report = []
     filename = ''
+
+    # ususal names given to variables containing precious secrets
     usual_suspects = set(['password', 'pass', 'secret', 'token', 'passwd', 'pwd'])
+
+    # maps function to module
     fun_module = {}
 
     # specifically for SQL injection, dumb way to make strings come together :/
     done_line = set()
 
+    # a collection of dangerous libraries
     bad_imports = {
         'telnetlib': {'severity': 'high', 'text': 'Use SSH or some other encrypted protocol.'},
         'ftplib': {'severity': 'high', 'text': 'Use SSH/SFTP/SCP or some other encrypted protocol.'},
@@ -37,8 +44,8 @@ class RecursiveVisitor(ast.NodeVisitor):
         'mako.template': {'severity': 'medium', 'text': 'mako has no autoescape feature, use proper tags in html', 'heading': 'xss'},
     }
 
-    # @ToDo
-    # Add specific functions like new
+    # dangerous functions of specific libraries
+    # can be extended
     bad_calls = {
         'pickle': {'functions' : ['loads', 'load', 'Unpickler'], 'severity': 'medium', 'text':'possible security issue with pickle'},
         'cPickle': {'functions' : ['loads', 'load', 'Unpickler'], 'severity': 'medium', 'text':'possible security issue with pickle'},
@@ -68,6 +75,8 @@ class RecursiveVisitor(ast.NodeVisitor):
 
     only_password = False
 
+    # clears the report array and done_line
+    # they need to be created again as other instnaces would get the same value
     def clear(self):
         self.report = []
         self.done_line = set()
@@ -87,6 +96,7 @@ class RecursiveVisitor(ast.NodeVisitor):
     def set_only_password(self, only_password):
         self.only_password = only_password
 
+    # adds issue to report
     def add_to_report(self, issue, location, severity, confidence, text):
 
         threat = {
@@ -99,6 +109,7 @@ class RecursiveVisitor(ast.NodeVisitor):
 
         self.report.append(threat)
 
+    # takes care of credentials
     @recursive
     def visit_Assign(self, node):
 
@@ -116,12 +127,14 @@ class RecursiveVisitor(ast.NodeVisitor):
                             for child_string in ast.iter_child_nodes(child_index):
                                 if child_string.s in self.usual_suspects:
                                     self.add_to_report('exposed-credentials', child_string.lineno, 'medium', 'low', 'assigned value to dic index %s' %(child_string.s))
+    # takes care of credentials
     @recursive
     def visit_Compare(self, node):
         if isinstance(node.left, ast.Name) and node.left.id in self.usual_suspects:
             if isinstance(node.comparators[0], ast.Str):
                 self.add_to_report('exposed-credentials', node.lineno, 'medium', 'low', '%s compared with plain text' %(node.left.id))
 
+    # handles credentials supplied as argument defaults
     @recursive
     def visit_arguments(self, node):
 
@@ -139,10 +152,12 @@ class RecursiveVisitor(ast.NodeVisitor):
             else:
                 interesting_name = False
 
+    # handles keywords for a function
     def visit_keyword(self, node):
         if node.arg in self.usual_suspects:
             self.add_to_report('exposed-credentials', node.value.lineno, 'medium', 'low', 'argument %s given value'%(node.arg))
 
+    # handles bad imports
     @recursive
     def visit_Import(self, node):
 
@@ -256,6 +271,7 @@ class RecursiveVisitor(ast.NodeVisitor):
                         self.add_to_report('exec-as-root', node.lineno, 'low', 'high', 'run as root can be potentially dangerous, set to false')
                         auto_escape_found = True
 
+    # plays with strings to handle sqli
     @recursive
     def visit_BinOp(self, node):
 
@@ -291,6 +307,7 @@ class RecursiveVisitor(ast.NodeVisitor):
     def visit_Module(self, node):
         pass
 
+    # handles exec statement
     @recursive
     def visit_Exec(self, node):
         if self.only_password:

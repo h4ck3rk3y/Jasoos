@@ -18,6 +18,9 @@ queues = [Queue(str(i), connection=Redis()) for i in range(8)]
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
+
+# :param url the url of the git repository
+# :return A report object
 def analyze_url(url):
 	job = get_current_job()
 	analyzer = StaticAnalyzer(url, job)
@@ -26,19 +29,21 @@ def analyze_url(url):
 	return analyzer.complete_report
 
 
+# A function to serve basic webpages
 @app.route('/')
 @app.route('/result/<queue_id>')
 @app.route('/wait')
 def basic_pages(**kwargs):
 	return make_response(open('templates/index.html').read())
 
+# API end that takes in the GitHub url for processing
 @app.route("/api/analyzer/", methods=["POST"])
 def analyzer_api():
 	request_data = request.get_json(silent=True)
 	if 'url' in request_data:
 		url = request_data['url']
 		q = random.choice(queues)
-		job = q.enqueue_call(func = 'app.analyze_url', args=(url,), result_ttl=5000)
+		job = q.enqueue_call(func = 'app.analyze_url', args=(url,), result_ttl=5000, ttl=10000, timeout=10000)
 		data = {}
 		data['status'] = 'processing'
 		data['id'] = job.get_id()
@@ -51,6 +56,7 @@ def analyzer_api():
 def favicon():
 	return send_from_directory('static/img', 'favicon.ico')
 
+# API end to query the status of the analysis
 @app.route('/api/result/<queue_id>', methods=["GET"])
 def result(queue_id):
 	job = Job.fetch(queue_id, connection=Redis())
