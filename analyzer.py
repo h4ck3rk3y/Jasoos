@@ -118,7 +118,11 @@ class StaticAnalyzer:
                     if first:
                         first = False
                         continue
-                    source = self.get_file(r, r[commit.commit.id].tree, cleaned_path[1:])
-                    self.run_tests(source, cleaned_path, True, commit.commit.id)
-
+                    try:
+                        source = self.get_file(r, r[commit.commit.id].tree, cleaned_path[1:])
+                        self.run_tests(source, cleaned_path, True, commit.commit.id)
+                    except KeyError:
+                        # known dulwich error
+                        # @FixThis
+                        pass
         shutil.rmtree(self.path)

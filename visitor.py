@@ -125,7 +125,7 @@ class RecursiveVisitor(ast.NodeVisitor):
                     for child_index in ast.iter_child_nodes(child_assign):
                         if isinstance(child_index, ast.Index):
                             for child_string in ast.iter_child_nodes(child_index):
-                                if child_string.s in self.usual_suspects:
+                                if isinstance(child_string, ast.Str) and child_string.s in self.usual_suspects:
                                     self.add_to_report('exposed-credentials', child_string.lineno, 'medium', 'low', 'assigned value to dic index %s' %(child_string.s))
     # takes care of credentials
     @recursive
