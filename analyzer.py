@@ -92,11 +92,12 @@ class StaticAnalyzer:
                 if not f.endswith('.py'):
                     continue
 
-                self.job.meta['current_file'] = os.path.join(root, f).replace(self.path, '')
+                cleaned_path = os.path.join(root, f).replace(self.path, '')
+                self.job.meta['current_file'] = cleaned_path
                 self.job.save()
 
                 with open(os.path.join(root, f), 'r') as source_file:
-                    self.run_tests(source_file.read(), os.path.join(root, f))
+                    self.run_tests(source_file.read(), cleaned_path)
 
         r = Repo(self.path)
         for root, dirs, files in os.walk(self.path):
@@ -105,10 +106,11 @@ class StaticAnalyzer:
                 if not f.endswith('.py'):
                     continue
 
-                self.job.meta['current_file'] = os.path.join(root, f).replace(self.path, '')
+                cleaned_path = os.path.join(root, f).replace(self.path, '')
+                self.job.meta['current_file'] = cleaned_path
                 self.job.save()
 
-                walker = r.get_walker(paths=[f])
+                walker = r.get_walker(paths=[cleaned_path[1:]])
                 commits = iter(walker)
 
                 first = True
@@ -116,7 +118,7 @@ class StaticAnalyzer:
                     if first:
                         first = False
                         continue
-                    source = self.get_file(r, r[commit.commit.id].tree, f)
-                    self.run_tests(source, os.path.join(root, f), True, commit.commit.id)
+                    source = self.get_file(r, r[commit.commit.id].tree, cleaned_path[1:])
+                    self.run_tests(source, cleaned_path, True, commit.commit.id)
 
         shutil.rmtree(self.path)
