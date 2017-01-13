@@ -8,8 +8,8 @@ angular.module('AngularFlask', ['angularFlaskServices'])
 			templateUrl: 'static/partials/search.html',
 			controller: SearchController
 		})
-		.when('/result', {
-			templateUrl: 'static/partials/result.html',
+		.when('/result/:queue_id', {
+			templateUrl: '/static/partials/result.html',
 			controller: ResultController
 		})
 		.otherwise({

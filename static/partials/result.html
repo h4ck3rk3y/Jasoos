@@ -1,2 +1,24 @@
-<h1>{{data.url}}</h1>
-<h1>{{data.status}}</h1>
+<div align="center" class="container-fluid">
+	<div ng-show="data.status == 'processing'">
+		<h1>Loading....!</h1>
+		<h1>{{quote}}</h1>
+		<h1>Currently processing .. {{data.current_file}}</h1>
+	</div>
+	<div ng-show="data.status == 'success'">
+		<div ng-repeat="(filename, report) in data.report">
+			<h3>filename: {{filename}}</h3>
+			<div ng-repeat="(commitid, issues) in report.commits">
+				<h4>commit_id: {{commitid}}</h4>
+				<div ng-repeat="issue in issues">
+					<h5>{{issue.issue}}</h5>
+					<h6>Confidence: {{issue.confidence}}</h5>
+					<h6>Severity: {{issue.severity}}</h6>
+					<h6>Location: {{issue.location}}</h6>
+					<h6>Description: {{issue.text}}</h6>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+

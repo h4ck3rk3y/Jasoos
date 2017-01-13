@@ -2,6 +2,9 @@ from dulwich.repo import Repo
 from dulwich.object_store import tree_lookup_path
 from git import Repo as rp
 
+import random
+import string
+
 from urlparse import urlparse
 
 import math
@@ -17,7 +20,7 @@ import shutil
 # Add parts of code affected for front end?
 
 class StaticAnalyzer:
-    def __init__(self, url):
+    def __init__(self, url, job):
         self.url = url
 
         if not self.validate_url():
@@ -35,10 +38,12 @@ class StaticAnalyzer:
             pass
 
         self.complete_report = {}
+        self.job = job
 
     def validate_url(self):
         parsed_url = urlparse(self.url)
-        self.path = 'repos/%s' %(parsed_url.path[1:].replace('/', '-'))
+        temp_path = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(15))
+        self.path = 'repos/%s' %(temp_path)
 
         if not parsed_url.netloc == 'github.com':
             return False, "Host not GitHub"
@@ -72,6 +77,7 @@ class StaticAnalyzer:
 
     def analyze(self):
 
+
         # ToDo add support for older file versions
         for root, dirs, files in os.walk(self.path):
             for f in files:
@@ -79,6 +85,9 @@ class StaticAnalyzer:
                 # maybe support other files in the future
                 if not f.endswith('.py'):
                     continue
+
+                self.job.meta['current_file'] = os.path.join(root, f).replace(self.path, '')
+                self.job.save()
 
                 with open(os.path.join(root, f), 'r') as source_file:
                     self.run_tests(source_file.read(), os.path.join(root, f))
@@ -89,6 +98,9 @@ class StaticAnalyzer:
 
                 if not f.endswith('.py'):
                     continue
+
+                self.job.meta['current_file'] = os.path.join(root, f).replace(self.path, '')
+                self.job.save()
 
                 walker = r.get_walker(paths=[f])
                 commits = iter(walker)

@@ -8,6 +8,14 @@ angular.module('angularFlaskServices', ['ngResource'])
 			}
 		})
 	})
+	.factory('Result', function($resource){
+		return $resource('/api/result/:queue_id', {}, {
+			query : {
+				method: 'GET',
+				params: {'queue_id': ''}
+			}
+		})
+	})
 ;
 
 
