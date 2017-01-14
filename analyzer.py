@@ -62,7 +62,7 @@ class StaticAnalyzer:
         try:
             tree = ast.parse(source)
         except:
-            self.complete_report[filename] = {'error': 'couldnt parse the source'
+            self.complete_report[filename] = {'error': 'couldnt parse the source',
             'commit': commit}
             return
         recursive_visitor = RecursiveVisitor()
