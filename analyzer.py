@@ -60,9 +60,10 @@ class StaticAnalyzer:
     # A function that runs tests on the given file
     def run_tests(self, source, filename, only_password = False, commit = 'HEAD'):
         try:
+            print source
             tree = ast.parse(source)
         except:
-            self.complete_report[filename] = 'unparsable'
+            self.complete_report[filename] = {'error': 'couldnt parse the source'}
             return
         recursive_visitor = RecursiveVisitor()
         recursive_visitor.clear()
