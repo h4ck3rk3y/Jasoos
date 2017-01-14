@@ -7,6 +7,7 @@
 	<div ng-show="data.status == 'success'">
 		<div ng-repeat="(filename, report) in data.report">
 			<h3>filename: {{filename}}</h3>
+			<h4>{{report.commit}}</h4>
 			<h4>{{report.error}}</h4>
 			<div ng-repeat="(commitid, issues) in report.commits">
 				<h4>commit_id: {{commitid}}</h4>
