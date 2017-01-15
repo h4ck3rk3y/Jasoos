@@ -1,8 +1,7 @@
 from flask import Flask, request, jsonify
 from flask import render_template, send_from_directory, make_response
-import time
-from util import clean_dict
 
+from util import clean_dict
 from analyzer import StaticAnalyzer
 
 from rq import Queue
@@ -34,6 +33,7 @@ def analyze_url(url):
 @app.route('/')
 @app.route('/result/<queue_id>')
 @app.route('/wait')
+@app.route('/about')
 def basic_pages(**kwargs):
 	return make_response(open('templates/index.html').read())
 
@@ -75,6 +75,9 @@ def result(queue_id):
 	else:
 		data['current_file'] = job.meta['current_file']
 		data['status'] = 'processing'
+		if job.meta.get('error', False):
+			data['status'] = 'error'
+			data['error'] = job.meta['error']
 		clean_dict(data)
 		return jsonify(**data)
 
