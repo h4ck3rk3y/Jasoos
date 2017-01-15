@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask import render_template, send_from_directory, make_response
 import time
+from util import clean_dict
 
 from analyzer import StaticAnalyzer
 
@@ -49,9 +50,11 @@ def analyzer_api():
 		job.meta['current_file'] = 'still cloning'
 		job.save()
 		data['id'] = job.get_id()
+		clean_dict(data)
 		return jsonify(**data)
 	else:
 		data = {'status': 'error'}
+		clean_dict(data)
 		return jsonify(**data)
 
 @app.route('/favicon.ico')
@@ -67,10 +70,12 @@ def result(queue_id):
 	if job.is_finished:
 		data['report'] = job.result
 		data['status'] = 'success'
+		clean_dict(data)
 		return jsonify(**data)
 	else:
 		data['current_file'] = job.meta['current_file']
 		data['status'] = 'processing'
+		clean_dict(data)
 		return jsonify(**data)
 
 

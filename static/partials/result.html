@@ -4,23 +4,34 @@
 		<h1>{{quote}}</h1>
 		<h1>Currently processing .. {{data.current_file}}</h1>
 	</div>
-	<div ng-show="data.status == 'success'">
-		<div ng-repeat="(filename, report) in data.report">
-			<h3>filename: {{filename}}</h3>
-			<h4>{{report.commit}}</h4>
-			<h4>{{report.error}}</h4>
-			<div ng-repeat="(commitid, issues) in report.commits">
-				<h4>commit_id: {{commitid}}</h4>
-				<div ng-repeat="issue in issues">
-					<h4>Issue: {{issue.issue}}</h5>
-					<h6>Confidence: {{issue.confidence}}</h5>
-					<h6>Severity: {{issue.severity}}</h6>
-					<h6>Location: {{issue.location}}</h6>
-					<h6>Description: {{issue.text}}</h6>
-				</div>
-			</div>
+</div>
+
+<div ng-show="data.status == 'success'">
+	<div ng-repeat="(filename, report) in data.report">
+		<h3>Filename: {{filename}}</h3>
+		<div ng-show="report.error">
+			<h4>Error: {{report.error}}</h4>
+			<h5>Commit Hash: {{report.commit}}</h5>
+		</div>
+		<div ng-repeat="(commitid, issues) in report.commits">
+			<h5>Commit Hash: {{commitid}}</h5>
+			<table style="width:100%">
+				<tr>
+					<th>Issue</th>
+					<th>Confidence</th>
+					<th>Severity</th>
+					<th>Location</th>
+					<th>Description</th>
+				</tr>
+				<tr ng-repeat="issue in issues">
+					<td>{{issue.issue}}</td>
+					<td>{{issue.confidence}}</td>
+					<td>{{issue.severity}}</td>
+					<td>{{issue.location}}</td>
+					<td>{{issue.text}}</td>
+				</tr>
+			</table>
 		</div>
 	</div>
 </div>
-
 
