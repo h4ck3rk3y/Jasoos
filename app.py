@@ -67,20 +67,24 @@ def result(queue_id):
 	job = Job.fetch(queue_id, connection=Redis())
 
 	data = {}
+
 	if job.is_finished:
 		data['report'] = job.result
 		data['status'] = 'success'
 		clean_dict(data)
-		return jsonify(**data)
+
+	elif job.is_failed:
+		data['status'] = 'error'
+		if job.meta.get('error', False):
+			data['error'] = job.meta['error']
+		else:
+			data['error'] = 'couldnt clone, probably an RQ error'
 	else:
 		data['current_file'] = job.meta['current_file']
 		data['status'] = 'processing'
-		if job.meta.get('error', False):
-			data['status'] = 'error'
-			data['error'] = job.meta['error']
 		clean_dict(data)
-		return jsonify(**data)
 
+	return jsonify(**data)
 
 @app.errorhandler(404)
 def not_found(e):
