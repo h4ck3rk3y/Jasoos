@@ -79,6 +79,9 @@ def result(queue_id):
 			data['error'] = job.meta['error']
 		else:
 			data['error'] = 'couldnt clone, probably an RQ error'
+
+	elif job.is_queued:
+		data['status'] = 'queued'
 	else:
 		data['current_file'] = job.meta['current_file']
 		data['status'] = 'processing'

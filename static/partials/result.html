@@ -13,6 +13,15 @@
 	</div>
 </div>
 
+<div align="center" class="container-fluid">
+	<div ng-show="data.status == 'queued'">
+		<h1>Your request has been queued</h1>
+		<h1>Please come back shortly</h1>
+		<h1>Maybe you can try again on another tab and luckily get an empty queue</h1>
+	</div>
+</div>
+
+
 <div ng-show="data.status == 'success'">
 	<div ng-repeat="(filename, report) in data.report">
 		<h3>Filename: {{filename}}</h3>
