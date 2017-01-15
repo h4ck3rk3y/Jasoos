@@ -1,4 +1,7 @@
-# Python Static Code Analyzer in a Python
+# Jasoos
+## Python Static Code Analyzer in a Python
+
+Jasoos means 'Detective' in Hindi.
 
 A lot of the tests have been borrowed from the package 'bandit' by OpenStack.
 
