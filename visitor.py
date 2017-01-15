@@ -15,7 +15,7 @@ class RecursiveVisitor(ast.NodeVisitor):
     filename = ''
 
     # ususal names given to variables containing precious secrets
-    usual_suspects = set(['password', 'pass', 'secret', 'token', 'passwd', 'pwd'])
+    usual_suspects = set(['password', 'pass', 'secret', 'token', 'passwd', 'pwd', 'oauth', 'S3Connection','aws_secret_access_key', 'auth_header', 'cred'])
 
     # maps function to module
     fun_module = {}
@@ -67,7 +67,8 @@ class RecursiveVisitor(ast.NodeVisitor):
         'os': {'functions': ['system', 'popen', 'popen2', 'popen3', 'popen4'], 'severity': 'low', 'text': 'Possible shell injection', 'heading': 'shell-injection'},
         'popen2': {'functions': ['popen2', 'popen3', 'popen4', 'Popen3', 'Popen4'], 'severity': 'low', 'text': 'Possible shell injection', 'heading': 'shell-injection'},
         'commands': {'functions': ['getoutput', 'getstatusoutput'], 'severity': 'low', 'text': 'Possible shell injection', 'heading': 'shell-injection'},
-        'subprocess': {'functions': ['Popen', 'call', 'check_call', 'check_output'], 'severity': 'low', 'text': 'Possible shell injection', 'heading': 'shell-injection'}
+        'subprocess': {'functions': ['Popen', 'call', 'check_call', 'check_output'], 'severity': 'low', 'text': 'Possible shell injection', 'heading': 'shell-injection'},
+        'JSONDecoder': {'functions': ['raw_decode'], 'severity': 'medium', 'text': 'JSONDecoder.raw_decode is vulnerable and can lead to arbitrary process memory read', 'heading': 'process memory read'}
     }
 
     bad_functions = [x['functions'] for x in bad_calls.values()]
@@ -115,8 +116,10 @@ class RecursiveVisitor(ast.NodeVisitor):
 
         # direct assignment
         for target in node.targets:
-            if isinstance(target, ast.Name) and target.id in self.usual_suspects:
+            if isinstance(target, ast.Name) and target.id.lower() in self.usual_suspects:
                 self.add_to_report('exposed-credentials', target.lineno, 'medium', 'low', 'assigned value to %s' %(target.id))
+            if not self.only_password and isinstance(target, ast.Name) and target.id == 'DEBUG' and getattr(node.value, 'id', False) == 'True':
+                self.add_to_report('debug-enabled', node.lineno, 'medium', 'high', 'running an application with debug enabled can be dangerous')
 
         # dictionary
         if isinstance(node.value, ast.Str):
@@ -125,12 +128,12 @@ class RecursiveVisitor(ast.NodeVisitor):
                     for child_index in ast.iter_child_nodes(child_assign):
                         if isinstance(child_index, ast.Index):
                             for child_string in ast.iter_child_nodes(child_index):
-                                if isinstance(child_string, ast.Str) and child_string.s in self.usual_suspects:
+                                if isinstance(child_string, ast.Str) and child_string.s.lower() in self.usual_suspects:
                                     self.add_to_report('exposed-credentials', child_string.lineno, 'medium', 'low', 'assigned value to dic index %s' %(child_string.s))
     # takes care of credentials
     @recursive
     def visit_Compare(self, node):
-        if isinstance(node.left, ast.Name) and node.left.id in self.usual_suspects:
+        if isinstance(node.left, ast.Name) and node.left.id.lower() in self.usual_suspects:
             if isinstance(node.comparators[0], ast.Str):
                 self.add_to_report('exposed-credentials', node.lineno, 'medium', 'low', '%s compared with plain text' %(node.left.id))
 
@@ -303,9 +306,34 @@ class RecursiveVisitor(ast.NodeVisitor):
             self.add_to_report('sql-injection', node.lineno, 'medium', 'low', 'potential sqli by using string based queries')
         self.done_line.add(node.lineno)
 
+
+    @recursive
+    def visit_Str(self, node):
+        if self.only_password:
+            return
+
+        query = node.s.lower()
+        injection = ((query.startswith('select ') and ' from ' in query) or
+            query.startswith('insert into') or
+            (query.startswith('update ') and ' set ' in query) or
+            query.startswith('delete from '))
+
+        if injection:
+            self.add_to_report('sql-injection', node.lineno, 'medium', 'low', 'potential sqli by using string based queries');
+
     @recursive
     def visit_Module(self, node):
         pass
+
+
+    @recursive
+    def visit_FunctionDef(self, node):
+        if self.only_password:
+            return
+        # csrf
+        for decorator in node.decorator_list:
+            if isinstance(decorator, ast.Name) and decorator.id == 'csrf_exempt':
+                self.add_to_report('csrf', node.lineno, 'medium', 'high', 'use of csrf_exempt can lead to csrf')
 
     # handles exec statement
     @recursive
