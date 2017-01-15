@@ -6,6 +6,13 @@
 	</div>
 </div>
 
+<div align="center" class="container-fluid">
+	<div ng-show="data.status == 'error'">
+		<h1>data.error</h1>
+		<h1>Please try again?</h1>
+	</div>
+</div>
+
 <div ng-show="data.status == 'success'">
 	<div ng-repeat="(filename, report) in data.report">
 		<h3>Filename: {{filename}}</h3>
