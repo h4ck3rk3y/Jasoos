@@ -36,7 +36,8 @@ class StaticAnalyzer:
         try:
             rp.clone_from(self.url, self.path)
         except:
-            pass
+            self.job.meta['error'] = 'Couldnt clone repository'
+            self.job.save()
 
         self.complete_report = {}
         self.job = job
@@ -44,7 +45,7 @@ class StaticAnalyzer:
     # A function that performs basic validation of the URL
     def validate_url(self):
         parsed_url = urlparse(self.url)
-        temp_path = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(15))
+        temp_path = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(35))
         self.path = 'repos/%s' %(temp_path)
 
         if not parsed_url.netloc == 'github.com':
@@ -99,8 +100,11 @@ class StaticAnalyzer:
 
                 with open(os.path.join(root, f), 'r') as source_file:
                     self.run_tests(source_file.read(), cleaned_path)
+        try:
+            r = Repo(self.path)
+        except:
+            return
 
-        r = Repo(self.path)
         for root, dirs, files in os.walk(self.path):
             for f in files:
 
