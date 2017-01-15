@@ -14,6 +14,7 @@ I've implemented tests for a lot of things including
 - dangerous functions
 - dangerous imports
 - debug enabled
+- csrf
 
 
 # Installation Instructions

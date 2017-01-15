@@ -40,8 +40,8 @@ class RecursiveVisitor(ast.NodeVisitor):
         'xml.sax': {'severity': 'low', 'text': 'use defusedxml instead'},
         'xml.etree.ElementTree': {'severity': 'low', 'text': 'use defusedxml instead'},
         'xml.etree.cElementTree': {'severity': 'low', 'text': 'use defusedxml instead'},
-        'mako': {'severity': 'medium', 'text': 'mako has no autoescape feature, use proper tags in html', 'heading': 'xss'},
-        'mako.template': {'severity': 'medium', 'text': 'mako has no autoescape feature, use proper tags in html', 'heading': 'xss'},
+        'mako': {'severity': 'medium', 'text': 'mako has no autoescape feature, use proper tags in html', 'heading': 'XSS'},
+        'mako.template': {'severity': 'medium', 'text': 'mako has no autoescape feature, use proper tags in html', 'heading': 'XSS'},
     }
 
     # dangerous functions of specific libraries
@@ -225,14 +225,14 @@ class RecursiveVisitor(ast.NodeVisitor):
                 auto_escape_found=False
                 for keyword in node.keywords:
                     if keyword.arg=='autoescape' and (getattr(keyword.value, 'id', None)=='False' or getattr(keyword.value, 'value', None) == False):
-                        self.add_to_report('xss', node.lineno, 'high', 'high', 'auto escape is set to False, please correct it or face XSS')
+                        self.add_to_report('XSS', node.lineno, 'high', 'high', 'auto escape is set to False, please correct it or face XSS')
                         auto_escape_found = True
                     elif keyword.arg == 'autoescape':
                         auto_escape_found = True
 
 
                 if not auto_escape_found:
-                    self.add_to_report('xss', node.lineno, 'high', 'high', 'auto escape is false by default set to true, please correct it or face XSS')
+                    self.add_to_report('XSS', node.lineno, 'high', 'high', 'auto escape is false by default set to true, please correct it or face XSS')
 
 
         if isinstance(node.func, ast.Attribute):
@@ -256,13 +256,13 @@ class RecursiveVisitor(ast.NodeVisitor):
                 auto_escape_found=False
                 for keyword in node.keywords:
                     if keyword.arg=='autoescape' and (getattr(keyword.value, 'id', None)=='False' or getattr(keyword.value, 'value', None) == False):
-                        self.add_to_report('xss', node.lineno, 'high', 'high', 'auto escape is set to False, please correct it or face XSS')
+                        self.add_to_report('XSS', node.lineno, 'high', 'high', 'auto escape is set to False, please correct it or face XSS')
                         auto_escape_found = True
                     elif keyword.arg == 'autoescape':
                         auto_escape_found = True
 
                 if not auto_escape_found:
-                    self.add_to_report('xss', node.lineno, 'high', 'high', 'auto escape is false by default set to true, please correct it or face XSS')
+                    self.add_to_report('XSS', node.lineno, 'high', 'high', 'auto escape is false by default set to true, please correct it or face XSS')
 
             if node.func.attr in ('execute', 'executemany') and len(node.args)>1:
                 return False
