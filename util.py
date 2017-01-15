@@ -1,7 +1,8 @@
 
 def clean_str(value, key = 'default'):
 	if value:
-		value = value.replace('-',' ')
+		if key not in ('current_file'):
+			value = value.replace('-',' ')
 		if key not in ('commit', 'commitid', 'status'):
 			value = list(value)
 			value[0] = value[0].upper()
