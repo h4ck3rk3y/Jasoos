@@ -240,7 +240,7 @@ class RecursiveVisitor(ast.NodeVisitor):
             # bad-calls
             # handles as imports properly
             module = self.fun_module.get(getattr(node.func.value, 'id', None), {}).get('module', None) or getattr(node.func.value, 'id', False)
-            if module in self.bad_calls and (node.func.attr in self.bad_functions or (str(self.fun_module[node.func.value.id]['name']) + '.' +  str(node.func.attr)) in self.bad_functions):
+            if module in self.bad_calls and (node.func.attr in self.bad_functions or (module in self.fun_module and (str(self.fun_module[module]['name']) + '.' +  str(node.func.attr) in self.bad_functions))):
                 heading = self.bad_calls[module].get('heading', 'bad-calls')
                 self.add_to_report(heading, node.lineno, self.bad_calls[module]['severity'], 'high', self.bad_calls[module]['text'])
 
