@@ -21,9 +21,9 @@ app.url_map.strict_slashes = False
 
 # :param url the url of the git repository
 # :return A report object
-def analyze_url(url):
+def analyze_url(url, previous):
 	job = get_current_job()
-	analyzer = StaticAnalyzer(url, job)
+	analyzer = StaticAnalyzer(url, previous, job)
 	analyzer.analyze()
 
 	return analyzer.complete_report
@@ -42,9 +42,13 @@ def basic_pages(**kwargs):
 def analyzer_api():
 	request_data = request.get_json(silent=True)
 	if 'url' in request_data:
+		previous = False
+		if 'previous' in request_data:
+			if request_data['previous'] == "True":
+				previous = True
 		url = request_data['url']
 		q = random.choice(queues)
-		job = q.enqueue_call(func = 'app.analyze_url', args=(url,), result_ttl=5000, ttl=10000, timeout=10000)
+		job = q.enqueue_call(func = 'app.analyze_url', args=(url, previous,), result_ttl=5000, ttl=10000, timeout=10000)
 		data = {}
 		data['status'] = 'processing'
 		job.meta['current_file'] = 'still cloning'

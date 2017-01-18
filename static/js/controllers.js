@@ -28,13 +28,13 @@ function waitmessages()
 }
 
 function SearchController($scope, Search, $window, $timeout){
-    $scope.analyze = function(url) {
+    $scope.analyze = function(url, previous) {
     	var expression = /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
 		var regex = new RegExp(expression);
 
     	if (url!=undefined && url!='' && url.match(regex))
     	{
-    		Search.post({url: url}, function(data) {
+    		Search.post({url: url, previous: previous}, function(data) {
     			$window.location = '/result/' + data.id;
     		});
     	}

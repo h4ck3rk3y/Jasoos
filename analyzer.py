@@ -21,7 +21,7 @@ import shutil
 
 # Static Analyzer Class
 class StaticAnalyzer:
-    def __init__(self, url, job):
+    def __init__(self, url, previous, job):
         self.url = url
 
         if not self.validate_url():
@@ -41,6 +41,7 @@ class StaticAnalyzer:
 
         self.complete_report = {}
         self.job = job
+        self.previous = previous
 
     # A function that performs basic validation of the URL
     def validate_url(self):
@@ -100,34 +101,36 @@ class StaticAnalyzer:
 
                 with open(os.path.join(root, f), 'r') as source_file:
                     self.run_tests(source_file.read(), cleaned_path)
-        try:
-            r = Repo(self.path)
-        except:
-            return
 
-        for root, dirs, files in os.walk(self.path):
-            for f in files:
+        if self.previous:
+            try:
+                r = Repo(self.path)
+            except:
+                return
 
-                if not f.endswith('.py'):
-                    continue
+            for root, dirs, files in os.walk(self.path):
+                for f in files:
 
-                cleaned_path = os.path.join(root, f).replace(self.path, '')
-                self.job.meta['current_file'] = cleaned_path
-                self.job.save()
-
-                walker = r.get_walker(paths=[cleaned_path[1:]])
-                commits = iter(walker)
-
-                first = True
-                for commit in commits:
-                    if first:
-                        first = False
+                    if not f.endswith('.py'):
                         continue
-                    try:
-                        source = self.get_file(r, r[commit.commit.id].tree, cleaned_path[1:])
-                        self.run_tests(source, cleaned_path, True, commit.commit.id)
-                    except KeyError:
-                        # known dulwich error
-                        # @FixThis
-                        pass
+
+                    cleaned_path = os.path.join(root, f).replace(self.path, '')
+                    self.job.meta['current_file'] = cleaned_path
+                    self.job.save()
+
+                    walker = r.get_walker(paths=[cleaned_path[1:]])
+                    commits = iter(walker)
+
+                    first = True
+                    for commit in commits:
+                        if first:
+                            first = False
+                            continue
+                        try:
+                            source = self.get_file(r, r[commit.commit.id].tree, cleaned_path[1:])
+                            self.run_tests(source, cleaned_path, True, commit.commit.id)
+                        except KeyError:
+                            # known dulwich error
+                            # @FixThis
+                            pass
         shutil.rmtree(self.path)
