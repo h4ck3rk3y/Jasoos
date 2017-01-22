@@ -40,17 +40,17 @@ Profit??
 The static code analyzer uses the parses the AST of the source file.
 
 You can view the web version here, it produces html output
-- ec2-52-210-224-160.eu-west-1.compute.amazonaws.com
+- ec2-34-248-161-101.eu-west-1.compute.amazonaws.com
 
 For JSON consume the api at
 
-- ec2-52-210-224-160.eu-west-1.compute.amazonaws.com/api/analyzer
+- ec2-34-248-161-101.eu-west-1.compute.amazonaws.com/api/analyzer
 
 The API accepts post requests with 'url' set to a GitHub repository
 it returns an object that contains an id which you will use to query
 the result of the analysis
 
-- ec2-52-210-224-160.eu-west-1.compute.amazonaws.com/api/result/:id
+- ec2-34-248-161-101.eu-west-1.compute.amazonaws.com/api/result/:id
 
 Replace :id with the id provided by the above API.
 
