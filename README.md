@@ -23,7 +23,7 @@ You need redis and twistd installed and running on your system for the applicati
 
 ```
 
-$ git clone https://gitlab.com/prezi-homeassignments/Assignment-Security-GyanendraMishra
+$ git clone https://github.com/h4ck3rk3y/Jasoos
 
 $ pip install -r requirements.txt
 
@@ -40,22 +40,22 @@ Profit??
 The static code analyzer uses the parses the AST of the source file.
 
 You can view the web version here, it produces html output
-- ec2-34-248-161-101.eu-west-1.compute.amazonaws.com
+- localhost:8080
 
 For JSON consume the api at
 
-- ec2-34-248-161-101.eu-west-1.compute.amazonaws.com/api/analyzer
+- localhost:8080/api/analyzer
 
 The API accepts post requests with 'url' set to a GitHub repository
 it returns an object that contains an id which you will use to query
 the result of the analysis
 
-- ec2-34-248-161-101.eu-west-1.compute.amazonaws.com/api/result/:id
+- localhost:8080/api/result/:id
 
 Replace :id with the id provided by the above API.
 
 
-# Fixable shortcomings (could have used more time)
+# Fixable shortcomings
 
 - Better Documentation
 - The visitor and analyzer functions could be more extensible to use 'plugins' like repoguard has rules or how openstack has plugins. Some sort of extensibility has been achieved by the bad_imports and bad_calls dictionaries.
